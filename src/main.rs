@@ -1,9 +1,11 @@
 /*
-* --- CHEST LOOT GAME ---
-* This is a chest loot game in which the player rolls
+* --- CHEST LOOTING GAME ---
+* This is a chest looting game in which the player rolls
 * a dice and selects a chest, leading to different
 * outcomes.
 */
+
+const TOTAL_CHESTS: u8 = 100;
 
 #[derive(Debug)]
 struct Dice(u8);
@@ -54,9 +56,56 @@ impl Chest {
     }
 }
 
-fn main() {
-    let player_dice = Dice::roll();
-    let chests = [Chest::new(), Chest::new(), Chest::new()];
-    dbg!(&player_dice);
-    dbg!(&chests);
+fn get_user_selection() -> u8 {
+    const ERROR_MSG: &str = "Please type a number from 1 to 3!";
+    println!(
+        "Which chest do you want to open?\n\
+        \n\
+        1. Chest 1.\n\
+        2. Chest 2.\n\
+        3. Chest 3.\n"
+    );
+    let mut input = String::new();
+    loop {
+        input.clear();
+        if let Err(error) = std::io::stdin().read_line(&mut input) {
+            println!("Failed to get user input with error:\n{}", error);
+            continue;
+        }
+        match input.trim().parse() {
+            Err(_) => {
+                println!("{}", ERROR_MSG);
+                continue;
+            }
+            Ok(selection) => {
+                if selection < 1 || selection > 3 {
+                    println!("{}", ERROR_MSG);
+                    continue;
+                }
+                return selection;
+            }
+        }
+    }
 }
+
+fn main() {
+    println!("WELCOME TO THE CHEST LOOTING GAME!");
+    let player_dice = Dice::roll();
+    println!("You rolled a dice: {}\n", player_dice.0);
+    let chests = [Chest::new(), Chest::new(), Chest::new()];
+    let user_selection = get_user_selection();
+}
+
+/*
+* # TASKLIST
+* - [x] Player rolls a dice.
+* - [x] Three chests with loot and dices are generated.
+* - [x] The player chooses a chest.
+* - [/] The player gets special outcome on:
+*   - Natural 20.
+*   - Natural 1.
+* - [ ] The game checks the duel for a:
+*   - Regular Success.
+*   - Regular Miss.
+* (...)
+*/
