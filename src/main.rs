@@ -5,7 +5,16 @@
 * outcomes.
 */
 
+use crate::Critical::*;
+
 const TOTAL_CHESTS: u8 = 100;
+
+#[derive(Debug)]
+enum Critical {
+    Hit,
+    Miss,
+    None,
+}
 
 #[derive(Debug)]
 struct Dice(u8);
@@ -13,6 +22,13 @@ struct Dice(u8);
 impl Dice {
     fn roll() -> Self {
         Self(rand::random_range(1..=20))
+    }
+    fn is_critical(&self) -> Critical {
+        match self.0 {
+            20 => Critical::Hit,
+            1 => Critical::Miss,
+            _ => Critical::None,
+        }
     }
 }
 
@@ -59,7 +75,8 @@ impl Chest {
 fn get_user_selection() -> u8 {
     const ERROR_MSG: &str = "Please type a number from 1 to 3!";
     println!(
-        "Which chest do you want to open?\n\
+        "\n\
+        Which chest do you want to open?\n\
         \n\
         1. Chest 1.\n\
         2. Chest 2.\n\
@@ -91,7 +108,13 @@ fn get_user_selection() -> u8 {
 fn main() {
     println!("WELCOME TO THE CHEST LOOTING GAME!");
     let player_dice = Dice::roll();
-    println!("You rolled a dice: {}\n", player_dice.0);
+    println!("You rolled a dice: {}", player_dice.0);
+    let critical_status = player_dice.is_critical();
+    match critical_status {
+        Hit => println!("Oh yes!"),
+        Miss => println!("Oh no!"),
+        None => (),
+    }
     let chests = [Chest::new(), Chest::new(), Chest::new()];
     let user_selection = get_user_selection();
 }
@@ -101,10 +124,10 @@ fn main() {
 * - [x] Player rolls a dice.
 * - [x] Three chests with loot and dices are generated.
 * - [x] The player chooses a chest.
-* - [/] The player gets special outcome on:
+* - [x] The player gets special outcome on:
 *   - Natural 20.
 *   - Natural 1.
-* - [ ] The game checks the duel for a:
+* - [/] The game checks the duel for a:
 *   - Regular Success.
 *   - Regular Miss.
 * (...)
