@@ -8,8 +8,8 @@
 /*
 * # TODO
 * - [x] Keys and locked chests.
-* - [ ] Game loop.
-* - [ ] Player status reports.
+* - [x] Game loop.
+* - [/] Player status reports.
 * - [ ] Game over.
 */
 
@@ -20,17 +20,19 @@ const TOTAL_CHESTS: u8 = 100;
 fn main() {
     println!("WELCOME TO THE CHEST LOOTING GAME!");
     let mut player = Player::new();
-    let player_dice = Dice::roll();
-    println!("You rolled a dice: {}", player_dice.0);
-    let critical_status = player_dice.is_critical();
-    match critical_status {
-        Hit => println!("Oh yes!"),
-        Miss => println!("Oh no!"),
-        None => (),
+    while player.remaining_chests > 0 {
+        let player_dice = Dice::roll();
+        println!("You rolled a dice: {}", player_dice.0);
+        let critical_status = player_dice.is_critical();
+        match critical_status {
+            Hit => println!("Oh yes!"),
+            Miss => println!("Oh no!"),
+            None => (),
+        }
+        let chests = [Chest::new(), Chest::new(), Chest::new()];
+        let user_selection = get_user_selection();
+        player.open_chest(player_dice, critical_status, chests, user_selection);
     }
-    let chests = [Chest::new(), Chest::new(), Chest::new()];
-    let user_selection = get_user_selection();
-    player.open_chest(player_dice, critical_status, chests, user_selection);
 }
 
 #[derive(Debug)]
