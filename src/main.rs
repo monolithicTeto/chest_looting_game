@@ -5,24 +5,21 @@
 * outcomes.
 */
 
-/*
-* # TODO
-* - [x] Keys and locked chests.
-* - [x] Game loop.
-* - [/] Player status reports.
-* - [ ] Game over.
-*/
-
 use crate::{Critical::*, Loot::*};
+use std::process::exit;
 
-const TOTAL_CHESTS: u8 = 100;
+const TOTAL_CHESTS: i8 = 100;
 
 fn main() {
-    println!("WELCOME TO THE CHEST LOOTING GAME!");
+    println!("\nWELCOME TO THE CHEST LOOTING GAME!");
     let mut player = Player::new();
     while player.remaining_chests > 0 {
         let player_dice = Dice::roll();
-        println!("You rolled a dice: {}", player_dice.0);
+        println!(
+            "There are {} chests left in the dungeon.\n\
+            You rolled a dice: {}",
+            player.remaining_chests, player_dice.0
+        );
         let critical_status = player_dice.is_critical();
         match critical_status {
             Hit => println!("Oh yes!"),
@@ -32,7 +29,27 @@ fn main() {
         let chests = [Chest::new(), Chest::new(), Chest::new()];
         let user_selection = get_user_selection();
         player.open_chest(player_dice, critical_status, chests, user_selection);
+        if player.hp < 1 {
+            println!(
+                "Your wounds made you bleed to death.\n\
+                \n\
+                Thanks for playing!"
+            );
+            exit(0)
+        }
     }
+    println!(
+        "You cleared all the chests!\n\
+        \n\
+        You walked out of the dungeon with:\n\
+        {} HP left.\n\
+        {} gold.\n\
+        A powerful weapon that deals {} points of damage.\n\
+        \n\
+        Thanks for playing!",
+        player.hp, player.gold, player.weapon_dmg
+    );
+    exit(0)
 }
 
 #[derive(Debug)]
@@ -41,7 +58,7 @@ struct Player {
     gold: usize,
     keys: u8,
     weapon_dmg: usize,
-    remaining_chests: u8,
+    remaining_chests: i8,
 }
 
 impl Player {
@@ -62,14 +79,18 @@ impl Player {
         user_selection: usize,
     ) {
         let user_selection = user_selection - 1;
-        self.remaining_chests -= 1;
+        self.remaining_chests -= 3;
         if chests[user_selection].locked {
             if self.keys < 1 {
-                println!("This chest was locked but you had no keys left!");
+                println!("\nThis chest was locked but you had no keys left!\n");
                 return;
             }
-            println!("You used a key to open this chest!");
             self.keys -= 1;
+            println!(
+                "\nYou used a key to open this chest!\n\
+                Keys left: {}",
+                self.keys
+            );
         }
         let weapon_name = match rand::random_range(0..7) {
             0 => "a Sword",
@@ -88,27 +109,36 @@ impl Player {
                         if self.hp > 100 {
                             self.hp = 100;
                         }
-                        println!("You found a potion! You recovered 30 HP.")
+                        println!("\nYou found a potion! You recovered 30 HP.\n")
                     }
                     Gold(g) => {
                         self.gold += g * 2;
-                        println!("You found {} gold!", g * 2);
+                        println!(
+                            "\nYou found {} gold!\n\
+                            You now have {} gold.\n",
+                            g * 2,
+                            self.gold
+                        );
                     }
                     Key => {
                         self.keys += 2;
-                        println!("You found not one, but two keys!");
+                        println!(
+                            "\nYou found not one, but two keys!\n\
+                            You now have {} keys.\n",
+                            self.keys
+                        );
                     }
                     Weapon { damage: d } => {
                         if self.weapon_dmg < d * 2 {
                             self.weapon_dmg = d * 2;
                             println!(
-                                "You found {}! Your new weapon does {} damage.",
+                                "\nYou found {}! Your new weapon does {} damage.\n",
                                 weapon_name,
                                 d * 2
                             );
                         } else {
                             println!(
-                                "You found {}, but your current weapon is stronger.",
+                                "\nYou found {}, but your current weapon is stronger.\n",
                                 weapon_name
                             );
                         };
@@ -116,14 +146,15 @@ impl Player {
                     Nothing => {
                         self.gold += 50;
                         println!(
-                            "The chest was empty, but your infinite luck\n\
-                            made you find 50 gold on the floor anyway!"
+                            "\nThe chest was empty, but your infinite luck\n\
+                            made you find 50 gold on the floor anyway!\n"
                         )
                     }
                 };
             }
             Miss => {
                 self.hp -= 20;
+                println!("\nThe chest bit you back! You took 20 points of damage.\n");
             }
             None => {
                 if player_dice.0 > chests[user_selection].dice.0 {
@@ -133,34 +164,42 @@ impl Player {
                             if self.hp > 100 {
                                 self.hp = 100;
                             };
-                            println!("You found a potion! You recovered 15 HP.");
+                            println!("\nYou found a potion! You recovered 15 HP.\n");
                         }
                         Gold(g) => {
                             self.gold += g;
-                            println!("You found {} gold!", g);
+                            println!(
+                                "\nYou found {} gold!\n\
+                                You now have {} gold.\n",
+                                g, self.gold
+                            );
                         }
                         Key => {
                             self.keys += 1;
-                            println!("You found a key!");
+                            println!(
+                                "\nYou found a key!\n\
+                                You now have {} keys.\n",
+                                self.keys
+                            );
                         }
                         Weapon { damage: d } => {
                             if self.weapon_dmg < d {
                                 self.weapon_dmg = d;
                                 println!(
-                                    "You found {}! Your new weapon does {} damage.",
+                                    "\nYou found {}! Your new weapon does {} damage.\n",
                                     weapon_name, d
                                 );
                             } else {
                                 println!(
-                                    "You found {}, but your current weapon is stronger.",
+                                    "\nYou found {}, but your current weapon is stronger.\n",
                                     weapon_name
                                 );
                             };
                         }
-                        Nothing => println!("Bad luck! The chest was empty!"),
+                        Nothing => println!("\nBad luck! The chest was empty!\n"),
                     };
                 } else {
-                    println!("You were too clumsy to open this chest!");
+                    println!("\nYou were too clumsy to open this chest!\n");
                 }
             }
         }
