@@ -7,8 +7,9 @@
 
 /*
 * # TODO
-* - [ ] Keys and locked chests.
+* - [x] Keys and locked chests.
 * - [ ] Game loop.
+* - [ ] Player status reports.
 * - [ ] Game over.
 */
 
@@ -58,7 +59,16 @@ impl Player {
         chests: [Chest; 3],
         user_selection: usize,
     ) {
+        let user_selection = user_selection - 1;
         self.remaining_chests -= 1;
+        if chests[user_selection].locked {
+            if self.keys < 1 {
+                println!("This chest was locked but you had no keys left!");
+                return;
+            }
+            println!("You used a key to open this chest!");
+            self.keys -= 1;
+        }
         let weapon_name = match rand::random_range(0..7) {
             0 => "a Sword",
             1 => "an Axe",
@@ -68,7 +78,6 @@ impl Player {
             5 => "a Mace",
             _ => "a Hammer",
         };
-        let user_selection = user_selection - 1;
         match critical_status {
             Hit => {
                 match chests[user_selection].loot {
@@ -206,6 +215,7 @@ impl Loot {
 struct Chest {
     loot: Loot,
     dice: Dice,
+    locked: bool,
 }
 
 impl Chest {
@@ -213,6 +223,10 @@ impl Chest {
         Self {
             loot: Loot::new(),
             dice: Dice::roll(),
+            locked: match rand::random_range(0..2) {
+                0 => false,
+                _ => true,
+            },
         }
     }
 }
