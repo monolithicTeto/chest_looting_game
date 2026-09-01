@@ -5,6 +5,12 @@
 * outcomes.
 */
 
+/* TODO
+* - [ ] Move system messages to constants.
+* - [ ] Add an exit selection.
+* - [ ] Clear the terminal on each loop.
+*/
+
 use crate::{Critical::*, Loot::*};
 use std::process::exit;
 
