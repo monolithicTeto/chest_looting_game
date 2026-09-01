@@ -27,6 +27,7 @@
 *           - More than 2000 negative.
 *           - More than 6000 negative.
 *       - On loses, the player takes between 15 and 30 damage.
+* - [ ] Make it so succesfully opening a locked chest never gets you Nothing.
 * - [ ] Implement the "Director."
 * - [ ] Silently grant a d20 after a number of misses.
 * - [ ] Silently grant a d1 after a number of hits.
@@ -54,7 +55,7 @@ fn main() {
         let player_dice = Dice::roll(false);
         println!(
             "There are {} chests left in the dungeon.\n\
-            You rolled a dice: {}",
+                You rolled a dice: {}",
             player.remaining_chests, player_dice.0
         );
         let critical_status = player_dice.is_critical();
@@ -71,13 +72,13 @@ fn main() {
         }
         println!(
             "\n\
-            Which chest do you want to open?\n\
-            \n\
-            1. A {}-looking Chest.\n\
-            2. A {}-looking Chest.\n\
-            3. A {}-looking Chest.\n\
-            \n\
-            0. Leave.\n",
+                Which chest do you want to open?\n\
+                \n\
+                1. A {}-looking Chest.\n\
+                2. A {}-looking Chest.\n\
+                3. A {}-looking Chest.\n\
+                \n\
+                0. Leave.\n",
             chests[0].is_strong(),
             chests[1].is_strong(),
             chests[2].is_strong()
@@ -171,7 +172,7 @@ impl Player {
                         self.gold += apply_bonuses(g, &chests[user_selection].dice) * 2;
                         println!(
                             "\nYou found {} gold!\n\
-                            You now have {} gold.\n",
+                                You now have {} gold.\n",
                             apply_bonuses(g, &chests[user_selection].dice) * 2,
                             self.gold
                         );
@@ -180,17 +181,26 @@ impl Player {
                         self.keys += 2;
                         println!(
                             "\nYou found not one, but two keys!\n\
-                            You now have {} keys.\n",
+                                You now have {} keys.\n",
                             self.keys
                         );
                     }
                     Loot::Weapon { damage: d } => {
-                        if self.weapon_dmg < d * 2 {
-                            self.weapon_dmg = apply_bonuses(d, &chests[user_selection].dice) * 2;
+                        if self.weapon_dmg < apply_bonuses(d, &chests[user_selection].dice) * 2 {
+                            self.weapon_dmg =
+                                if apply_bonuses(d, &chests[user_selection].dice) * 2 > 9999 {
+                                    9999
+                                } else {
+                                    apply_bonuses(d, &chests[user_selection].dice) * 2
+                                };
                             println!(
                                 "\nYou found {}! Your new weapon does {} damage.\n",
                                 weapon_name,
-                                apply_bonuses(d, &chests[user_selection].dice) * 2
+                                if apply_bonuses(d, &chests[user_selection].dice) * 2 > 9999 {
+                                    apply_bonuses(d, &chests[user_selection].dice) * 2
+                                } else {
+                                    9999
+                                }
                             );
                         } else {
                             println!(
@@ -226,7 +236,7 @@ impl Player {
                             self.gold += apply_bonuses(g, &chests[user_selection].dice);
                             println!(
                                 "\nYou found {} gold!\n\
-                                You now have {} gold.\n",
+                                    You now have {} gold.\n",
                                 apply_bonuses(g, &chests[user_selection].dice),
                                 self.gold
                             );
@@ -235,12 +245,12 @@ impl Player {
                             self.keys += 1;
                             println!(
                                 "\nYou found a key!\n\
-                                You now have {} keys.\n",
+                                    You now have {} keys.\n",
                                 self.keys
                             );
                         }
                         Loot::Weapon { damage: d } => {
-                            if self.weapon_dmg < d {
+                            if self.weapon_dmg < apply_bonuses(d, &chests[user_selection].dice) {
                                 self.weapon_dmg = apply_bonuses(d, &chests[user_selection].dice);
                                 println!(
                                     "\nYou found {}! Your new weapon does {} damage.\n",
@@ -270,11 +280,11 @@ impl Player {
     fn print_exit(&self) {
         println!(
             "You walked out of the dungeon with:\n\
-            {} HP left.\n\
-            {} gold.\n\
-            A {} weapon that deals {} points of damage.\n\
-            \n\
-            Thanks for playing!\n",
+                {} HP left.\n\
+                {} gold.\n\
+                A {} weapon that deals {} points of damage.\n\
+                \n\
+                Thanks for playing!\n",
             self.hp,
             self.gold,
             if self.weapon_dmg < 200 {
@@ -330,7 +340,7 @@ impl Loot {
             1 => Self::Gold(rand::random_range(20..=200)),
             2 => Self::Key,
             3 => Self::Weapon {
-                damage: rand::random_range(1..=3333),
+                damage: rand::random_range(1..=3334),
             },
             _ => Self::Nothing,
         }
