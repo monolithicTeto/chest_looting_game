@@ -80,7 +80,7 @@ impl Player {
     fn new() -> Self {
         Self {
             hp: 100,
-            gold: 0,
+            gold: 15,
             keys: 3,
             weapon_dmg: 10,
             remaining_chests: TOTAL_CHESTS,
