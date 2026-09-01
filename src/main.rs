@@ -25,7 +25,10 @@ const TOTAL_CHESTS: i8 = 100;
 
 fn main() {
     clear_terminal();
-    println!("\nWELCOME TO THE CHEST LOOTING GAME!");
+    println!(
+        "\nWELCOME TO THE CHEST LOOTING GAME!\n\
+        ----------------------------------\
+        \n");
     let mut player = Player::new();
     while player.remaining_chests > 0 {
         let player_dice = Dice::roll();
