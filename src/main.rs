@@ -18,7 +18,7 @@
 *   - Between 6 and 14.
 *   - Less than 6.
 * - [/] Make it possible to refuse spending a key.
-*   - [ ] Add monster attacks when a chest is no opened.
+*   - [ ] Add monster attacks when a locked chest is not opened.
 *       - Flavored text get printed when the damage difference is:
 *           - More than 6000 positive.
 *           - More than 2000 positive.
@@ -162,45 +162,38 @@ impl Player {
             Critical::Hit => {
                 match chests[user_selection].loot {
                     Loot::Potion => {
-                        self.hp += 30;
+                        let p = 30;
+                        self.hp += p;
                         if self.hp > 100 {
                             self.hp = 100;
                         }
-                        println!("\nYou found a potion! You recovered 30 HP.\n")
+                        println!("\nYou found a potion! You recovered {} HP.\n", p);
                     }
                     Loot::Gold(g) => {
-                        self.gold += apply_bonuses(g, &chests[user_selection].dice) * 2;
+                        let g = apply_bonuses(g, &chests[user_selection].dice) * 2;
+                        self.gold = g;
                         println!(
                             "\nYou found {} gold!\n\
-                                You now have {} gold.\n",
-                            apply_bonuses(g, &chests[user_selection].dice) * 2,
-                            self.gold
+                            You now have {} gold.\n",
+                            g, self.gold
                         );
                     }
                     Loot::Key => {
                         self.keys += 2;
                         println!(
                             "\nYou found not one, but two keys!\n\
-                                You now have {} keys.\n",
+                            You now have {} keys.\n",
                             self.keys
                         );
                     }
                     Loot::Weapon { damage: d } => {
-                        if self.weapon_dmg < apply_bonuses(d, &chests[user_selection].dice) * 2 {
-                            self.weapon_dmg =
-                                if apply_bonuses(d, &chests[user_selection].dice) * 2 > 9999 {
-                                    9999
-                                } else {
-                                    apply_bonuses(d, &chests[user_selection].dice) * 2
-                                };
+                        let d = apply_bonuses(d, &chests[user_selection].dice) * 2;
+                        let d = if d > 9999 { 9999 } else { d };
+                        if self.weapon_dmg < d {
+                            self.weapon_dmg = d;
                             println!(
                                 "\nYou found {}! Your new weapon does {} damage.\n",
-                                weapon_name,
-                                if apply_bonuses(d, &chests[user_selection].dice) * 2 > 9999 {
-                                    9999
-                                } else {
-                                    apply_bonuses(d, &chests[user_selection].dice) * 2
-                                }
+                                weapon_name, d
                             );
                         } else {
                             println!(
@@ -221,43 +214,48 @@ impl Player {
                 };
             }
             Critical::Miss => {
-                self.hp -= 20;
-                println!("\nThe chest bit back at your hand! You took 20 points of damage.\n");
+                let d = 20;
+                self.hp -= d;
+                println!(
+                    "\nThe chest bit back at your hand! You took {} points of damage.\n",
+                    d
+                );
             }
             Critical::None => {
                 if player_dice.0 >= chests[user_selection].dice.0 {
                     match chests[user_selection].loot {
                         Loot::Potion => {
-                            self.hp += 15;
+                            let p = 15;
+                            self.hp += p;
                             if self.hp > 100 {
                                 self.hp = 100;
                             };
-                            println!("\nYou found a potion! You recovered 15 HP.\n");
+                            println!("\nYou found a potion! You recovered {} HP.\n", p);
                         }
                         Loot::Gold(g) => {
-                            self.gold += apply_bonuses(g, &chests[user_selection].dice);
+                            let g = apply_bonuses(g, &chests[user_selection].dice);
+                            self.gold += g;
                             println!(
                                 "\nYou found {} gold!\n\
-                                    You now have {} gold.\n",
-                                apply_bonuses(g, &chests[user_selection].dice),
-                                self.gold
+                                You now have {} gold.\n",
+                                g, self.gold
                             );
                         }
                         Loot::Key => {
                             self.keys += 1;
                             println!(
                                 "\nYou found a key!\n\
-                                    You now have {} keys.\n",
+                                You now have {} keys.\n",
                                 self.keys
                             );
                         }
                         Loot::Weapon { damage: d } => {
-                            if self.weapon_dmg < apply_bonuses(d, &chests[user_selection].dice) {
-                                self.weapon_dmg = apply_bonuses(d, &chests[user_selection].dice);
+                            let d = apply_bonuses(d, &chests[user_selection].dice);
+                            if self.weapon_dmg < d {
+                                self.weapon_dmg = d;
                                 println!(
                                     "\nYou found {}! Your new weapon does {} damage.\n",
-                                    weapon_name,
-                                    apply_bonuses(d, &chests[user_selection].dice)
+                                    weapon_name, d
                                 );
                             } else {
                                 println!(
@@ -339,11 +337,14 @@ enum Loot {
 
 impl Loot {
     fn new() -> Self {
-        match rand::random_range(0..9) {
-            0..2 => Self::Potion,
-            2..4 => Self::Gold(rand::random_range(20..=200)),
-            4..6 => Self::Key,
-            6..8 => Self::Weapon {
+        match rand::random_range(0..1000) {
+            /* Chance of Nothing: 10%.
+             * Anything else: 22.5%.
+             */
+            000..225 => Self::Potion,
+            225..450 => Self::Gold(rand::random_range(20..=200)),
+            450..675 => Self::Key,
+            675..900 => Self::Weapon {
                 damage: rand::random_range(1..=3334),
             },
             _ => Self::Nothing,
@@ -372,10 +373,10 @@ impl Chest {
     fn is_strong(&self) -> &str {
         if self.dice.0 < rand::random_range(5..=7) {
             "Flimsy"
-        } else if self.dice.0 > rand::random_range(13..=15) {
-            "Sturdy"
-        } else {
+        } else if self.dice.0 < rand::random_range(13..=15) {
             "Regular"
+        } else {
+            "Sturdy"
         }
     }
 }
@@ -406,12 +407,12 @@ fn get_user_selection() -> usize {
 }
 
 fn apply_bonuses(n: usize, d: &Dice) -> usize {
-    if d.0 > 14 {
-        n / 2 * 3
-    } else if d.0 > 5 {
+    if d.0 < 7 {
+        n / 2
+    } else if d.0 < 15 {
         n
     } else {
-        n / 2
+        n / 2 * 3
     }
 }
 
