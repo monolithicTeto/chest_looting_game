@@ -282,15 +282,17 @@ impl Player {
             "You walked out of the dungeon with:\n\
                 {} HP left.\n\
                 {} gold.\n\
-                A {} weapon that deals {} points of damage.\n\
+                {} weapon that deals {} points of damage.\n\
                 \n\
                 Thanks for playing!\n",
             self.hp,
             self.gold,
-            if self.weapon_dmg < 200 {
-                "pitiful"
+            if self.weapon_dmg < 1000 {
+                "A pitiful"
+            } else if self.weapon_dmg < 6000 {
+                "A powerful"
             } else {
-                "powerful"
+                "An insane"
             },
             self.weapon_dmg
         );
