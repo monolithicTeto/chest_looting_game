@@ -197,9 +197,9 @@ impl Player {
                                 "\nYou found {}! Your new weapon does {} damage.\n",
                                 weapon_name,
                                 if apply_bonuses(d, &chests[user_selection].dice) * 2 > 9999 {
-                                    apply_bonuses(d, &chests[user_selection].dice) * 2
-                                } else {
                                     9999
+                                } else {
+                                    apply_bonuses(d, &chests[user_selection].dice) * 2
                                 }
                             );
                         } else {
