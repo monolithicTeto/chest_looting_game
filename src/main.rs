@@ -28,7 +28,8 @@ fn main() {
     println!(
         "\nWELCOME TO THE CHEST LOOTING GAME!\n\
         ----------------------------------\
-        \n");
+        \n"
+    );
     let mut player = Player::new();
     while player.remaining_chests > 0 {
         let player_dice = Dice::roll();
@@ -98,18 +99,23 @@ impl Player {
     ) {
         let user_selection = user_selection - 1;
         self.remaining_chests -= 3;
-        if chests[user_selection].locked {
-            if self.keys < 1 {
-                println!("\nThis chest was locked but you had no keys left!\n");
-                return;
+        match critical_status {
+            Critical::Miss => (),
+            _ => {
+                if chests[user_selection].locked {
+                    if self.keys < 1 {
+                        println!("\nThis chest was locked but you had no keys left!\n");
+                        return;
+                    }
+                    self.keys -= 1;
+                    println!(
+                        "\nYou used a key to open this chest!\n\
+                            Keys left: {}",
+                        self.keys
+                    );
+                };
             }
-            self.keys -= 1;
-            println!(
-                "\nYou used a key to open this chest!\n\
-                Keys left: {}",
-                self.keys
-            );
-        }
+        };
         let weapon_name = match rand::random_range(0..7) {
             0 => "a Sword",
             1 => "an Axe",
