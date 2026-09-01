@@ -36,7 +36,7 @@
 
 use std::process::exit;
 
-const TOTAL_CHESTS: i8 = 100;
+const TOTAL_CHESTS: i8 = 99;
 const SHOW_DEBUG: bool = false;
 
 fn main() {
@@ -55,7 +55,7 @@ fn main() {
         let player_dice = Dice::roll(false);
         println!(
             "There are {} chests left in the dungeon.\n\
-                You rolled a dice: {}",
+            You rolled a dice: {}",
             player.remaining_chests, player_dice.0
         );
         let critical_status = player_dice.is_critical();
@@ -72,13 +72,13 @@ fn main() {
         }
         println!(
             "\n\
-                Which chest do you want to open?\n\
-                \n\
-                1. A {}-looking Chest.\n\
-                2. A {}-looking Chest.\n\
-                3. A {}-looking Chest.\n\
-                \n\
-                0. Leave.\n",
+            Which chest do you want to open?\n\
+            \n\
+            1. A {}-looking Chest.\n\
+            2. A {}-looking Chest.\n\
+            3. A {}-looking Chest.\n\
+            \n\
+            0. Leave.\n",
             chests[0].is_strong(),
             chests[1].is_strong(),
             chests[2].is_strong()
@@ -210,10 +210,12 @@ impl Player {
                         };
                     }
                     Loot::Nothing => {
-                        self.gold += 50;
+                        let g = self.gold + rand::random_range(40..=70);
+                        self.gold = g;
                         println!(
                             "\nThe chest was empty, but your infinite luck\n\
-                            made you find 50 gold on the floor anyway!\n"
+                            made you find {} gold on the floor anyway!\n",
+                            g
                         )
                     }
                 };
