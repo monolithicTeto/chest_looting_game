@@ -10,11 +10,15 @@
 * - [ ] Add an exit selection.
 * - [ ] Make it possible to refuse spending a key.
 * - [ ] Lower the likelyhood of chests being locked to 20%.
+* - [ ] Silently grant a d20 after a number of misses.
+* - [ ] Silently grant a d1 after a number of hits.
 * - [ ] Add hints to how difficult each chest is to open.
+*   - Sturdy-looking.
+*   - Regular-looking.
+*   - Flimsy-looking.
 * - [ ] More flavor text to make the game more interesting.
 */
 
-use crate::{Critical::*, Loot::*};
 use std::process::exit;
 
 const TOTAL_CHESTS: i8 = 100;
@@ -32,9 +36,9 @@ fn main() {
         );
         let critical_status = player_dice.is_critical();
         match critical_status {
-            Hit => println!("Oh yes!"),
-            Miss => println!("Oh no!"),
-            None => (),
+            Critical::Hit => println!("Oh yes!"),
+            Critical::Miss => println!("Oh no!"),
+            Critical::None => (),
         }
         let chests = [Chest::new(), Chest::new(), Chest::new()];
         let user_selection = get_user_selection();
@@ -113,16 +117,16 @@ impl Player {
             _ => "a Hammer",
         };
         match critical_status {
-            Hit => {
+            Critical::Hit => {
                 match chests[user_selection].loot {
-                    Potion => {
+                    Loot::Potion => {
                         self.hp += 30;
                         if self.hp > 100 {
                             self.hp = 100;
                         }
                         println!("\nYou found a potion! You recovered 30 HP.\n")
                     }
-                    Gold(g) => {
+                    Loot::Gold(g) => {
                         self.gold += g * 2;
                         println!(
                             "\nYou found {} gold!\n\
@@ -131,7 +135,7 @@ impl Player {
                             self.gold
                         );
                     }
-                    Key => {
+                    Loot::Key => {
                         self.keys += 2;
                         println!(
                             "\nYou found not one, but two keys!\n\
@@ -139,7 +143,7 @@ impl Player {
                             self.keys
                         );
                     }
-                    Weapon { damage: d } => {
+                    Loot::Weapon { damage: d } => {
                         if self.weapon_dmg < d * 2 {
                             self.weapon_dmg = d * 2;
                             println!(
@@ -154,7 +158,7 @@ impl Player {
                             );
                         };
                     }
-                    Nothing => {
+                    Loot::Nothing => {
                         self.gold += 50;
                         println!(
                             "\nThe chest was empty, but your infinite luck\n\
@@ -163,21 +167,21 @@ impl Player {
                     }
                 };
             }
-            Miss => {
+            Critical::Miss => {
                 self.hp -= 20;
                 println!("\nThe chest bit you back! You took 20 points of damage.\n");
             }
-            None => {
+            Critical::None => {
                 if player_dice.0 > chests[user_selection].dice.0 {
                     match chests[user_selection].loot {
-                        Potion => {
+                        Loot::Potion => {
                             self.hp += 15;
                             if self.hp > 100 {
                                 self.hp = 100;
                             };
                             println!("\nYou found a potion! You recovered 15 HP.\n");
                         }
-                        Gold(g) => {
+                        Loot::Gold(g) => {
                             self.gold += g;
                             println!(
                                 "\nYou found {} gold!\n\
@@ -185,7 +189,7 @@ impl Player {
                                 g, self.gold
                             );
                         }
-                        Key => {
+                        Loot::Key => {
                             self.keys += 1;
                             println!(
                                 "\nYou found a key!\n\
@@ -193,7 +197,7 @@ impl Player {
                                 self.keys
                             );
                         }
-                        Weapon { damage: d } => {
+                        Loot::Weapon { damage: d } => {
                             if self.weapon_dmg < d {
                                 self.weapon_dmg = d;
                                 println!(
@@ -207,7 +211,7 @@ impl Player {
                                 );
                             };
                         }
-                        Nothing => println!("\nBad luck! The chest was empty!\n"),
+                        Loot::Nothing => println!("\nBad luck! The chest was empty!\n"),
                     };
                 } else {
                     println!("\nYou were too clumsy to open this chest!\n");
