@@ -51,7 +51,7 @@ fn main() {
         println!("------------------------------------\n");
     }
     while player.remaining_chests > 0 {
-        let player_dice = Dice::roll();
+        let player_dice = Dice::roll(false);
         println!(
             "There are {} chests left in the dungeon.\n\
             You rolled a dice: {}",
@@ -213,7 +213,7 @@ impl Player {
                 println!("\nThe chest bit back at your hand! You took 20 points of damage.\n");
             }
             Critical::None => {
-                if player_dice.0 > chests[user_selection].dice.0 {
+                if player_dice.0 >= chests[user_selection].dice.0 {
                     match chests[user_selection].loot {
                         Loot::Potion => {
                             self.hp += 15;
@@ -298,8 +298,12 @@ enum Critical {
 struct Dice(u8);
 
 impl Dice {
-    fn roll() -> Self {
-        Self(rand::random_range(1..=20))
+    fn roll(cap: bool) -> Self {
+        if cap {
+            Self(rand::random_range(1..=18))
+        } else {
+            Self(rand::random_range(1..=20))
+        }
     }
     fn is_critical(&self) -> Critical {
         match self.0 {
@@ -344,7 +348,7 @@ impl Chest {
     fn new() -> Self {
         Self {
             loot: Loot::new(),
-            dice: Dice::roll(),
+            dice: Dice::roll(true),
             locked: match rand::random_range(0..5) {
                 0 => true,
                 _ => false,
