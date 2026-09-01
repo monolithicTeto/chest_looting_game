@@ -335,11 +335,11 @@ enum Loot {
 
 impl Loot {
     fn new() -> Self {
-        match rand::random_range(0..5) {
-            0 => Self::Potion,
-            1 => Self::Gold(rand::random_range(20..=200)),
-            2 => Self::Key,
-            3 => Self::Weapon {
+        match rand::random_range(0..9) {
+            0..2 => Self::Potion,
+            2..4 => Self::Gold(rand::random_range(20..=200)),
+            4..6 => Self::Key,
+            6..8 => Self::Weapon {
                 damage: rand::random_range(1..=3334),
             },
             _ => Self::Nothing,
