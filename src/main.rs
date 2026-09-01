@@ -1,14 +1,17 @@
-/*
-* --- CHEST LOOTING GAME ---
+/* --- CHEST LOOTING GAME ---
 * This is a chest looting game in which the player rolls
 * a dice and selects a chest, leading to different
 * outcomes.
 */
 
 /* TODO
-* - [ ] Move system messages to constants.
+* - [x] Clear the terminal on each loop.
+* - [/] Move system messages to constants.
 * - [ ] Add an exit selection.
-* - [ ] Clear the terminal on each loop.
+* - [ ] Make it possible to refuse spending a key.
+* - [ ] Lower the likelyhood of chests being locked to 20%.
+* - [ ] Add hints to how difficult each chest is to open.
+* - [ ] More flavor text to make the game more interesting.
 */
 
 use crate::{Critical::*, Loot::*};
@@ -17,6 +20,7 @@ use std::process::exit;
 const TOTAL_CHESTS: i8 = 100;
 
 fn main() {
+    clear_terminal();
     println!("\nWELCOME TO THE CHEST LOOTING GAME!");
     let mut player = Player::new();
     while player.remaining_chests > 0 {
@@ -34,6 +38,7 @@ fn main() {
         }
         let chests = [Chest::new(), Chest::new(), Chest::new()];
         let user_selection = get_user_selection();
+        clear_terminal();
         player.open_chest(player_dice, critical_status, chests, user_selection);
         if player.hp < 1 {
             println!(
@@ -309,4 +314,15 @@ fn get_user_selection() -> usize {
             }
         }
     }
+}
+
+fn clear_terminal() {
+    /* 1B: terminal ESC command.
+     * [2J: clears the terminal.
+     * [1;1H: moves the cursor back to position '1;1'.
+     */
+    print!(
+        "\x1B[2J\
+        \x1B[1;1H"
+    );
 }
