@@ -9,10 +9,14 @@
 * - [x] Lower the likelyhood of chests being locked to 20%.
 * - [x] Add an exit selection.
 * - [~] Move system messages to constants.
-* - [/] Add hints to how difficult each chest is to open.
+* - [x] Add hints to how difficult each chest is to open.
 *   - Sturdy-looking.
 *   - Regular-looking.
 *   - Flimsy-looking.
+* - [/] Add bonuses depending on if the chest's dice is:
+*   - More than 14.
+*   - Between 6 and 14.
+*   - Less than 6.
 * - [ ] Make it possible to refuse spending a key.
 *   - [ ] Add monster attacks when a chest is no opened.
 *       - Flavored text get printed when the damage difference is:
@@ -55,6 +59,19 @@ fn main() {
             Critical::None => (),
         }
         let chests = [Chest::new(), Chest::new(), Chest::new()];
+        println!(
+            "\n\
+            Which chest do you want to open?\n\
+            \n\
+            1. A {}-looking Chest.\n\
+            2. A {}-looking Chest.\n\
+            3. A {}-looking Chest.\n\
+            \n\
+            0. Leave.\n",
+            chests[0].is_strong(),
+            chests[1].is_strong(),
+            chests[2].is_strong()
+        );
         let user_selection = get_user_selection();
         clear_terminal();
         if user_selection == 0 {
@@ -109,7 +126,7 @@ impl Player {
             _ => {
                 if chests[user_selection].locked {
                     if self.keys < 1 {
-                        println!("\nThis chest was locked but you had no keys left!\n");
+                        println!("\nThe chest was locked but you had no keys left!\n");
                         return;
                     }
                     self.keys -= 1;
@@ -183,7 +200,7 @@ impl Player {
             }
             Critical::Miss => {
                 self.hp -= 20;
-                println!("\nThe chest bit you back! You took 20 points of damage.\n");
+                println!("\nThe chest bit back at your hand! You took 20 points of damage.\n");
             }
             Critical::None => {
                 if player_dice.0 > chests[user_selection].dice.0 {
@@ -297,7 +314,7 @@ impl Loot {
             _ => Self::Nothing,
         }
     }
-}
+                }
 
 #[derive(Debug)]
 struct Chest {
@@ -317,20 +334,19 @@ impl Chest {
             },
         }
     }
+    fn is_strong(&self) -> &str {
+        if self.dice.0 < rand::random_range(5..=7) {
+            "Flimsy"
+        } else if self.dice.0 > rand::random_range(13..=15) {
+            "Sturdy"
+        } else {
+            "Regular"
+        }
+    }
 }
 
 fn get_user_selection() -> usize {
-    const ERROR_MSG: &str = "Please type a number from 1 to 3!";
-    println!(
-        "\n\
-        Which chest do you want to open?\n\
-        \n\
-        1. Chest 1.\n\
-        2. Chest 2.\n\
-        3. Chest 3.\n\
-        \n\
-        0. Leave.\n"
-    );
+    const ERROR_MSG: &str = "Please type a number from 0 to 3!";
     let mut input = String::new();
     loop {
         input.clear();
