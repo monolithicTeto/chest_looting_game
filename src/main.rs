@@ -7,15 +7,25 @@
 /* TODO
 * - [x] Clear the terminal on each loop.
 * - [x] Lower the likelyhood of chests being locked to 20%.
-* - [/] Move system messages to constants.
-* - [ ] Add an exit selection.
-* - [ ] Make it possible to refuse spending a key.
-* - [ ] Silently grant a d20 after a number of misses.
-* - [ ] Silently grant a d1 after a number of hits.
-* - [ ] Add hints to how difficult each chest is to open.
+* - [x] Add an exit selection.
+* - [~] Move system messages to constants.
+* - [/] Add hints to how difficult each chest is to open.
 *   - Sturdy-looking.
 *   - Regular-looking.
 *   - Flimsy-looking.
+* - [ ] Make it possible to refuse spending a key.
+*   - [ ] Add monster attacks when a chest is no opened.
+*       - Flavored text get printed when the damage difference is:
+*           - More than 6000 positive.
+*           - More than 2000 positive.
+*           - More than 200 positive.
+*           - More than 200 negative.
+*           - More than 2000 negative.
+*           - More than 6000 negative.
+*       - On loses, the player takes between 15 and 30 damage.
+* - [ ] Implement the "Director."
+    * - [ ] Silently grant a d20 after a number of misses.
+    * - [ ] Silently grant a d1 after a number of hits.
 * - [ ] More flavor text to make the game more interesting.
 */
 
@@ -47,27 +57,22 @@ fn main() {
         let chests = [Chest::new(), Chest::new(), Chest::new()];
         let user_selection = get_user_selection();
         clear_terminal();
+        if user_selection == 0 {
+            player.print_exit();
+            exit(0);
+        }
         player.open_chest(player_dice, critical_status, chests, user_selection);
         if player.hp < 1 {
             println!(
                 "Your wounds made you bleed to death.\n\
                 \n\
-                Thanks for playing!"
+                Thanks for playing!\n"
             );
             exit(0)
         }
     }
-    println!(
-        "You cleared all the chests!\n\
-        \n\
-        You walked out of the dungeon with:\n\
-        {} HP left.\n\
-        {} gold.\n\
-        A powerful weapon that deals {} points of damage.\n\
-        \n\
-        Thanks for playing!",
-        player.hp, player.gold, player.weapon_dmg
-    );
+    println!("You cleared all the chests!\n");
+    player.print_exit();
     exit(0)
 }
 
@@ -228,6 +233,24 @@ impl Player {
             }
         }
     }
+    fn print_exit(&self) {
+        println!(
+            "You walked out of the dungeon with:\n\
+            {} HP left.\n\
+            {} gold.\n\
+            A {} weapon that deals {} points of damage.\n\
+            \n\
+            Thanks for playing!\n",
+            self.hp,
+            self.gold,
+            if self.weapon_dmg < 200 {
+                "pitiful"
+            } else {
+                "powerful"
+            },
+            self.weapon_dmg
+        );
+    }
 }
 
 #[derive(Debug)]
@@ -304,7 +327,9 @@ fn get_user_selection() -> usize {
         \n\
         1. Chest 1.\n\
         2. Chest 2.\n\
-        3. Chest 3.\n"
+        3. Chest 3.\n\
+        \n\
+        0. Leave.\n"
     );
     let mut input = String::new();
     loop {
@@ -319,7 +344,7 @@ fn get_user_selection() -> usize {
                 continue;
             }
             Ok(selection) => {
-                if selection < 1 || selection > 3 {
+                if selection > 3 {
                     println!("{}", ERROR_MSG);
                     continue;
                 }
