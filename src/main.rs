@@ -13,11 +13,11 @@
 *   - Sturdy-looking.
 *   - Regular-looking.
 *   - Flimsy-looking.
-* - [/] Add bonuses depending on if the chest's dice is:
+* - [x] Add bonuses depending on if the chest's dice is:
 *   - More than 14.
 *   - Between 6 and 14.
 *   - Less than 6.
-* - [ ] Make it possible to refuse spending a key.
+* - [/] Make it possible to refuse spending a key.
 *   - [ ] Add monster attacks when a chest is no opened.
 *       - Flavored text get printed when the damage difference is:
 *           - More than 6000 positive.
@@ -28,14 +28,15 @@
 *           - More than 6000 negative.
 *       - On loses, the player takes between 15 and 30 damage.
 * - [ ] Implement the "Director."
-    * - [ ] Silently grant a d20 after a number of misses.
-    * - [ ] Silently grant a d1 after a number of hits.
+* - [ ] Silently grant a d20 after a number of misses.
+* - [ ] Silently grant a d1 after a number of hits.
 * - [ ] More flavor text to make the game more interesting.
 */
 
 use std::process::exit;
 
 const TOTAL_CHESTS: i8 = 100;
+const SHOW_DEBUG: bool = false;
 
 fn main() {
     clear_terminal();
@@ -45,6 +46,10 @@ fn main() {
         \n"
     );
     let mut player = Player::new();
+    if SHOW_DEBUG {
+        dbg!(&player);
+        println!("------------------------------------\n");
+    }
     while player.remaining_chests > 0 {
         let player_dice = Dice::roll();
         println!(
@@ -59,6 +64,11 @@ fn main() {
             Critical::None => (),
         }
         let chests = [Chest::new(), Chest::new(), Chest::new()];
+        if SHOW_DEBUG {
+            println!("\n------------------------------------");
+            dbg!(&chests);
+            println!("------------------------------------");
+        }
         println!(
             "\n\
             Which chest do you want to open?\n\
@@ -158,11 +168,11 @@ impl Player {
                         println!("\nYou found a potion! You recovered 30 HP.\n")
                     }
                     Loot::Gold(g) => {
-                        self.gold += g * 2;
+                        self.gold += apply_bonuses(g, &chests[user_selection].dice) * 2;
                         println!(
                             "\nYou found {} gold!\n\
                             You now have {} gold.\n",
-                            g * 2,
+                            apply_bonuses(g, &chests[user_selection].dice) * 2,
                             self.gold
                         );
                     }
@@ -176,11 +186,11 @@ impl Player {
                     }
                     Loot::Weapon { damage: d } => {
                         if self.weapon_dmg < d * 2 {
-                            self.weapon_dmg = d * 2;
+                            self.weapon_dmg = apply_bonuses(d, &chests[user_selection].dice) * 2;
                             println!(
                                 "\nYou found {}! Your new weapon does {} damage.\n",
                                 weapon_name,
-                                d * 2
+                                apply_bonuses(d, &chests[user_selection].dice) * 2
                             );
                         } else {
                             println!(
@@ -213,11 +223,12 @@ impl Player {
                             println!("\nYou found a potion! You recovered 15 HP.\n");
                         }
                         Loot::Gold(g) => {
-                            self.gold += g;
+                            self.gold += apply_bonuses(g, &chests[user_selection].dice);
                             println!(
                                 "\nYou found {} gold!\n\
                                 You now have {} gold.\n",
-                                g, self.gold
+                                apply_bonuses(g, &chests[user_selection].dice),
+                                self.gold
                             );
                         }
                         Loot::Key => {
@@ -230,10 +241,11 @@ impl Player {
                         }
                         Loot::Weapon { damage: d } => {
                             if self.weapon_dmg < d {
-                                self.weapon_dmg = d;
+                                self.weapon_dmg = apply_bonuses(d, &chests[user_selection].dice);
                                 println!(
                                     "\nYou found {}! Your new weapon does {} damage.\n",
-                                    weapon_name, d
+                                    weapon_name,
+                                    apply_bonuses(d, &chests[user_selection].dice)
                                 );
                             } else {
                                 println!(
@@ -248,6 +260,11 @@ impl Player {
                     println!("\nYou were too clumsy to open this chest!\n");
                 }
             }
+        }
+        if SHOW_DEBUG {
+            println!("----------------------------------------");
+            dbg!(&self);
+            println!("----------------------------------------\n");
         }
     }
     fn print_exit(&self) {
@@ -309,12 +326,12 @@ impl Loot {
             1 => Self::Gold(rand::random_range(20..=200)),
             2 => Self::Key,
             3 => Self::Weapon {
-                damage: rand::random_range(1..=4999),
+                damage: rand::random_range(1..=3333),
             },
             _ => Self::Nothing,
         }
     }
-                }
+}
 
 #[derive(Debug)]
 struct Chest {
@@ -367,6 +384,16 @@ fn get_user_selection() -> usize {
                 return selection;
             }
         }
+    }
+}
+
+fn apply_bonuses(n: usize, d: &Dice) -> usize {
+    if d.0 > 14 {
+        n / 2 * 3
+    } else if d.0 > 5 {
+        n
+    } else {
+        n / 2
     }
 }
 
