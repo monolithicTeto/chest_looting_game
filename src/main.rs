@@ -6,10 +6,10 @@
 
 /* TODO
 * - [x] Clear the terminal on each loop.
+* - [x] Lower the likelyhood of chests being locked to 20%.
 * - [/] Move system messages to constants.
 * - [ ] Add an exit selection.
 * - [ ] Make it possible to refuse spending a key.
-* - [ ] Lower the likelyhood of chests being locked to 20%.
 * - [ ] Silently grant a d20 after a number of misses.
 * - [ ] Silently grant a d1 after a number of hits.
 * - [ ] Add hints to how difficult each chest is to open.
@@ -288,9 +288,9 @@ impl Chest {
         Self {
             loot: Loot::new(),
             dice: Dice::roll(),
-            locked: match rand::random_range(0..2) {
-                0 => false,
-                _ => true,
+            locked: match rand::random_range(0..5) {
+                0 => true,
+                _ => false,
             },
         }
     }
