@@ -141,6 +141,7 @@ impl Player {
                 if chests[user_selection].locked {
                     if self.keys < 1 {
                         println!("\nThe chest was locked but you had no keys left!\n");
+                        self.monster_attack();
                         return;
                     }
                     println!(
@@ -155,68 +156,7 @@ impl Player {
                         clear_terminal();
                         self.keys -= 1;
                     } else {
-                        println!(
-                            "You turn around to leave the chest behind,\n\
-                            but a {} jumps you on your way out!\n",
-                            match rand::random_range(0..7) {
-                                0 => "Sneaky Goblin",
-                                1 => "Walking Skeleton",
-                                2 => "Sticky Slime",
-                                3 => "Giant Spider",
-                                4 => "Cave Crawler",
-                                5 => "Nightstalker",
-                                _ => "Dungeon Rat",
-                            }
-                        );
-                        let monster_attack = rand::random_range(1..=8000);
-                        if self.weapon_dmg > monster_attack {
-                            if self.weapon_dmg - monster_attack < 200 {
-                                println!(
-                                    "Your weapon was barely enough to outpower your foe!\n\
-                                    You take no damage from this encounter.\n"
-                                );
-                            } else if self.weapon_dmg - monster_attack < 2000 {
-                                println!(
-                                    "Your weapon proved very effective against your foe!\n\
-                                    You take no damage from this encounter.\n"
-                                );
-                            } else if self.weapon_dmg - monster_attack < 6000 {
-                                println!(
-                                    "Your weapon had you defeat your foe effortlessly!\n\
-                                    You take no damage from this encounter.\n"
-                                );
-                            } else {
-                                println!("Your weapon obliterated that poor bastard!\n");
-                            }
-                        } else {
-                            let battle_damage = rand::random_range(15..=30);
-                            if monster_attack - self.weapon_dmg < 200 {
-                                println!(
-                                    "It was a tight fight, but your weapon failed you at last!\n\
-                                    You managed to flee, but took {} points of damage.\n",
-                                    battle_damage
-                                );
-                            } else if monster_attack - self.weapon_dmg < 2000 {
-                                println!(
-                                    "Your weapon did not suffice against your foe!\n\
-                                    You managed to flee, but took {} points of damage.\n",
-                                    battle_damage
-                                );
-                            } else if monster_attack - self.weapon_dmg < 6000 {
-                                println!(
-                                    "Your weapon didn't do your foe a single scratch!\n\
-                                    You managed to flee, but took {} points of damage.\n",
-                                    battle_damage
-                                )
-                            } else {
-                                println!(
-                                    "Your weapon didn't do crap and you got smoked in combat!\n\
-                                    You managed to flee, but took {} points of damage.\n",
-                                    battle_damage
-                                )
-                            };
-                            self.hp -= battle_damage;
-                        };
+                        self.monster_attack();
                         clear_terminal();
                         return;
                     };
@@ -365,6 +305,70 @@ impl Player {
             },
             self.weapon_dmg
         );
+    }
+    fn monster_attack(&mut self) {
+        println!(
+            "You turn around to leave the chest behind,\n\
+            but a {} jumps you on your way out!\n",
+            match rand::random_range(0..7) {
+                0 => "Sneaky Goblin",
+                1 => "Walking Skeleton",
+                2 => "Sticky Slime",
+                3 => "Giant Spider",
+                4 => "Cave Crawler",
+                5 => "Nightstalker",
+                _ => "Dungeon Rat",
+            }
+        );
+        let monster_attack = rand::random_range(1..=8000);
+        if self.weapon_dmg > monster_attack {
+            if self.weapon_dmg - monster_attack < 200 {
+                println!(
+                    "Your weapon was barely enough to outpower your foe!\n\
+                    You take no damage from this encounter.\n"
+                );
+            } else if self.weapon_dmg - monster_attack < 2000 {
+                println!(
+                    "Your weapon proved very effective against your foe!\n\
+                    You take no damage from this encounter.\n"
+                );
+            } else if self.weapon_dmg - monster_attack < 6000 {
+                println!(
+                    "Your weapon had you defeat your foe effortlessly!\n\
+                    You take no damage from this encounter.\n"
+                );
+            } else {
+                println!("Your weapon obliterated that poor bastard!\n");
+            }
+        } else {
+            let battle_damage = rand::random_range(15..=30);
+            if monster_attack - self.weapon_dmg < 200 {
+                println!(
+                    "It was a tight fight, but your weapon failed you at last!\n\
+                    You managed to flee, but took {} points of damage.\n",
+                    battle_damage
+                );
+            } else if monster_attack - self.weapon_dmg < 2000 {
+                println!(
+                    "Your weapon did not suffice against your foe!\n\
+                    You managed to flee, but took {} points of damage.\n",
+                    battle_damage
+                );
+            } else if monster_attack - self.weapon_dmg < 6000 {
+                println!(
+                    "Your weapon didn't do your foe a single scratch!\n\
+                    You managed to flee, but took {} points of damage.\n",
+                    battle_damage
+                )
+            } else {
+                println!(
+                    "Your weapon didn't do crap and you got smoked in combat!\n\
+                    You managed to flee, but took {} points of damage.\n",
+                    battle_damage
+                )
+            };
+            self.hp -= battle_damage;
+        };
     }
 }
 
