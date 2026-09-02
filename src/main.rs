@@ -17,8 +17,8 @@
 *   - More than 14.
 *   - Between 6 and 14.
 *   - Less than 6.
-* - [/] Make it possible to refuse spending a key.
-*   - [ ] Add monster attacks when a locked chest is not opened.
+* - [x] Make it possible to refuse spending a key.
+*   - [x] Add monster attacks when a locked chest is not opened.
 *       - Flavored text get printed when the damage difference is:
 *           - More than 6000 positive.
 *           - More than 2000 positive.
@@ -27,7 +27,7 @@
 *           - More than 2000 negative.
 *           - More than 6000 negative.
 *       - On loses, the player takes between 15 and 30 damage.
-* - [ ] Make it so succesfully opening a locked chest never gets you Nothing.
+* - [/] Make it so succesfully opening a locked chest never gets you Nothing.
 * - [ ] Implement the "Director."
 * - [ ] Silently grant a d20 after a number of misses.
 * - [ ] Silently grant a d1 after a number of hits.
@@ -272,8 +272,8 @@ impl Player {
                         };
                     }
                     Loot::Nothing => {
-                        let g = self.gold + rand::random_range(40..=70);
-                        self.gold = g;
+                        let g = rand::random_range(40..=70);
+                        self.gold += g;
                         println!(
                             "\nThe chest was empty, but your infinite luck\n\
                             made you find {} gold on the floor anyway!\n",
