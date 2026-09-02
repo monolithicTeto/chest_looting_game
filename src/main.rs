@@ -408,12 +408,13 @@ impl Loot {
     fn new() -> Self {
         match rand::random_range(0..1000) {
             /* Chance of Nothing: 10%.
-             * Anything else: 22.5%.
+             * Chance of Key: 10%.
+             * Anything else: 26.6%.
              */
-            000..225 => Self::Potion,
-            225..450 => Self::Gold(rand::random_range(20..=200)),
-            450..675 => Self::Key,
-            675..900 => Self::Weapon {
+            000..100 => Self::Key,
+            100..366 => Self::Gold(rand::random_range(20..=200)),
+            366..632 => Self::Potion,
+            632..898 => Self::Weapon {
                 damage: rand::random_range(1..=3334),
             },
             _ => Self::Nothing,
@@ -451,7 +452,7 @@ impl Chest {
 }
 
 fn get_user_selection(selection_range: usize) -> usize {
-    let error_msg: String = format!("Please type a number from 0 to {}!\n", selection_range);
+    let error_msg: String = format!("\nPlease type a number from 0 to {}!\n", selection_range);
     let mut input = String::new();
     loop {
         input.clear();
