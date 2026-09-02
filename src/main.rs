@@ -37,21 +37,24 @@
 use std::process::exit;
 
 const TOTAL_CHESTS: i8 = 33 * 3;
-const SHOW_DEBUG: bool = true;
+const SHOW_DEBUG: bool = false;
 
 fn main() {
     clear_terminal();
-    println!(
-        "\nWELCOME TO THE CHEST LOOTING GAME!\n\
-        ----------------------------------\
+    if SHOW_DEBUG == false {
+        println!(
+            "\nWELCOME TO THE CHEST LOOTING GAME!\n\
+            ----------------------------------\
         \n"
-    );
+        );
+    };
     let mut player = Player::new();
-    if SHOW_DEBUG {
-        dbg!(&player);
-        println!("------------------------------------\n");
-    }
     while player.remaining_chests > 0 {
+        if SHOW_DEBUG {
+            println!("------------------------------------");
+            dbg!(&player);
+            println!("------------------------------------\n");
+        }
         let player_dice = Dice::roll(false);
         println!(
             "There are {} chests left in the dungeon.\n\
@@ -149,6 +152,7 @@ impl Player {
                         self.keys
                     );
                     if get_user_selection(1) == 1 {
+                        clear_terminal();
                         self.keys -= 1;
                     } else {
                         println!(
@@ -213,6 +217,7 @@ impl Player {
                             };
                             self.hp -= battle_damage;
                         };
+                        clear_terminal();
                         return;
                     };
                 };
@@ -340,11 +345,6 @@ impl Player {
                 }
             }
         }
-        if SHOW_DEBUG {
-            println!("----------------------------------------");
-            dbg!(&self);
-            println!("----------------------------------------\n");
-        }
     }
     fn print_exit(&self) {
         println!(
@@ -451,7 +451,7 @@ impl Chest {
 }
 
 fn get_user_selection(selection_range: usize) -> usize {
-    let error_msg: String = format!("Please type a number from 0 to {}!", selection_range);
+    let error_msg: String = format!("Please type a number from 0 to {}!\n", selection_range);
     let mut input = String::new();
     loop {
         input.clear();
