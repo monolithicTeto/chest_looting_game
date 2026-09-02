@@ -282,7 +282,7 @@ impl Player {
                 };
             }
             Critical::Miss => {
-                let d = 20;
+                let d = rand::random_range(17..=23);
                 self.hp -= d;
                 println!(
                     "\nThe chest bit back at your hand! You took {} points of damage.\n",
