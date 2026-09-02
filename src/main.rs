@@ -144,7 +144,8 @@ impl Player {
                         "\nThe chest is locked!\n\
                         Keys left: {}\n\
                         \n\
-                        Do you want to use a key?",
+                        Do you want to use a key?\n
+                         1. yes           0. no\n",
                         self.keys
                     );
                     if get_user_selection(1) == 1 {
