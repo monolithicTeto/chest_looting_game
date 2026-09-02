@@ -8,7 +8,6 @@
 * - [x] Clear the terminal on each loop.
 * - [x] Lower the likelyhood of chests being locked to 20%.
 * - [x] Add an exit selection.
-* - [~] Move system messages to constants.
 * - [x] Add hints to how difficult each chest is to open.
 *   - Sturdy-looking.
 *   - Regular-looking.
@@ -27,17 +26,18 @@
 *           - More than 2000 negative.
 *           - More than 6000 negative.
 *       - On loses, the player takes between 15 and 30 damage.
-* - [/] Make it so succesfully opening a locked chest never gets you Nothing.
-* - [ ] Implement the "Director."
-* - [ ] Silently grant a d20 after a number of misses.
-* - [ ] Silently grant a d1 after a number of hits.
-* - [ ] More flavor text to make the game more interesting.
+* - [/] Implement the "Director."
+*     - [ ] Silently grant a d20 after a number of misses.
+*     - [ ] Silently grant a d1 after a number of hits.
+* - [~] Make it so succesfully opening a locked chest never gets you Nothing.
+* - [~] Move system messages to constants.
+* - [~] More flavor text to make the game more interesting.
 */
 
 use std::process::exit;
 
-const TOTAL_CHESTS: i8 = 99;
-const SHOW_DEBUG: bool = false;
+const TOTAL_CHESTS: i8 = 33 * 3;
+const SHOW_DEBUG: bool = true;
 
 fn main() {
     clear_terminal();
@@ -106,7 +106,7 @@ fn main() {
 
 #[derive(Debug)]
 struct Player {
-    hp: i8,
+    hp: i16,
     gold: usize,
     keys: u8,
     weapon_dmg: usize,
@@ -144,7 +144,7 @@ impl Player {
                         "\nThe chest is locked!\n\
                         Keys left: {}\n\
                         \n\
-                        Do you want to use a key?\n
+                        Do you want to use a key?\n\
                          1. yes           0. no\n",
                         self.keys
                     );
@@ -152,7 +152,7 @@ impl Player {
                         self.keys -= 1;
                     } else {
                         println!(
-                            "You turn around to leave the chest behind,\n
+                            "You turn around to leave the chest behind,\n\
                             but a {} jumps you on your way out!\n",
                             match rand::random_range(0..7) {
                                 0 => "Sneaky Goblin",
@@ -188,25 +188,25 @@ impl Player {
                             let battle_damage = rand::random_range(15..=30);
                             if monster_attack - self.weapon_dmg < 200 {
                                 println!(
-                                    "It was a tight fight, but your weapon failed you at last!\n
-                                    You managed to flee, but took {} points of damage.",
+                                    "It was a tight fight, but your weapon failed you at last!\n\
+                                    You managed to flee, but took {} points of damage.\n",
                                     battle_damage
                                 );
                             } else if monster_attack - self.weapon_dmg < 2000 {
                                 println!(
-                                    "Your weapon did not suffice against your foe!\n
-                                    You managed to flee, but took {} points of damage.",
+                                    "Your weapon did not suffice against your foe!\n\
+                                    You managed to flee, but took {} points of damage.\n",
                                     battle_damage
                                 );
                             } else if monster_attack - self.weapon_dmg < 6000 {
                                 println!(
-                                    "Your weapon didn't do your foe a single scratch!\n
-                                    You managed to flee, but took {} points of damage.",
+                                    "Your weapon didn't do your foe a single scratch!\n\
+                                    You managed to flee, but took {} points of damage.\n",
                                     battle_damage
                                 )
                             } else {
                                 println!(
-                                    "Your weapon disintegrated on contact!\n
+                                    "Your weapon didn't do crap and you got smoked in combat!\n\
                                     You managed to flee, but took {} points of damage.\n",
                                     battle_damage
                                 )
@@ -490,8 +490,10 @@ fn clear_terminal() {
      * [2J: clears the terminal.
      * [1;1H: moves the cursor back to position '1;1'.
      */
-    print!(
-        "\x1B[2J\
-        \x1B[1;1H"
-    );
+    if SHOW_DEBUG == false {
+        print!(
+            "\x1B[2J\
+            \x1B[1;1H"
+        );
+    };
 }
