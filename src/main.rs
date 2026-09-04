@@ -1,37 +1,7 @@
 /* --- CHEST LOOTING GAME ---
 * This is a chest looting game in which the player rolls
-* a dice and selects a chest, leading to different
+* a die and selects a chest, leading to different
 * outcomes.
-*/
-
-/* TODO
-* - [x] Clear the terminal on each loop.
-* - [x] Lower the likelyhood of chests being locked to 20%.
-* - [x] Add an exit selection.
-* - [x] Add hints to how difficult each chest is to open.
-*   - Sturdy-looking.
-*   - Regular-looking.
-*   - Flimsy-looking.
-* - [x] Add bonuses depending on if the chest's dice is:
-*   - More than 14.
-*   - Between 6 and 14.
-*   - Less than 6.
-* - [x] Make it possible to refuse spending a key.
-*   - [x] Add monster attacks when a locked chest is not opened.
-*       - Flavored text get printed when the damage difference is:
-*           - More than 6000 positive.
-*           - More than 2000 positive.
-*           - More than 200 positive.
-*           - More than 200 negative.
-*           - More than 2000 negative.
-*           - More than 6000 negative.
-*       - On loses, the player takes between 15 and 30 damage.
-* - [/] Implement the "Director."
-*     - [ ] Silently grant a d20 after a number of misses.
-*     - [ ] Silently grant a d1 after a number of hits.
-* - [~] Make it so succesfully opening a locked chest never gets you Nothing.
-* - [~] Move system messages to constants.
-* - [~] More flavor text to make the game more interesting.
 */
 
 use std::process::exit;
@@ -44,8 +14,10 @@ fn main() {
     if SHOW_DEBUG == false {
         println!(
             "\nWELCOME TO THE CHEST LOOTING GAME!\n\
-            ----------------------------------\
-        \n"
+            ----------------------------------\n\
+            Armed with a Rusty Sword and your courage,\n\
+            you delve into the depths of a dungeon in\n\
+            search of unfathomable fortunes.\n"
         );
     };
     let mut player = Player::new();
@@ -55,17 +27,24 @@ fn main() {
             dbg!(&player);
             println!("------------------------------------\n");
         }
-        let player_dice = Dice::roll(false);
+        let player_die = Die::roll(false);
         println!(
             "There are {} chests left in the dungeon.\n\
-            You rolled a dice: {}",
-            player.remaining_chests, player_dice.0
+            You rolled a die: {}",
+            player.remaining_chests, player_die.0
         );
-        let critical_status = player_dice.is_critical();
+        let critical_status = player_die.is_critical();
         match critical_status {
             Critical::Hit => println!("Oh yes!"),
             Critical::Miss => println!("Oh no!"),
             Critical::None => (),
+        }
+        if player.hp < 15 {
+            println!("\nYou can feel death closing in...");
+        } else if player.hp < 33 {
+            println!("\nYou're losing consciousness...");
+        } else if player.hp < 66 {
+            println!("\nYou feel a little dizzy...");
         }
         let chests = [Chest::new(), Chest::new(), Chest::new()];
         if SHOW_DEBUG {
@@ -92,15 +71,21 @@ fn main() {
             player.print_exit();
             exit(0);
         }
-        player.open_chest(player_dice, critical_status, chests, user_selection);
+        player.open_chest(player_die, critical_status, chests, user_selection);
         if player.hp < 1 {
             println!(
-                "Your wounds made you bleed to death.\n\
+                "You bleed to death from your wounds.\n\
+                \n\
+                Your corpse lies somewhere in the depths\n\
+                of a dungeon, never to be found again.\n\
                 \n\
                 Thanks for playing!\n"
             );
             exit(0)
         }
+        if player.remaining_chests > 0 {
+            println!("You walk over to the next room.\n");
+        };
     }
     println!("You cleared all the chests!\n");
     player.print_exit();
@@ -128,7 +113,7 @@ impl Player {
     }
     fn open_chest(
         &mut self,
-        player_dice: Dice,
+        player_die: Die,
         critical_status: Critical,
         chests: [Chest; 3],
         user_selection: usize,
@@ -156,8 +141,8 @@ impl Player {
                         clear_terminal();
                         self.keys -= 1;
                     } else {
-                        self.monster_attack();
                         clear_terminal();
+                        self.monster_attack();
                         return;
                     };
                 };
@@ -184,7 +169,7 @@ impl Player {
                         println!("\nYou found a potion! You recovered {} HP.\n", p);
                     }
                     Loot::Gold(g) => {
-                        let g = apply_bonuses(g, &chests[user_selection].dice) * 2;
+                        let g = apply_bonuses(g, &chests[user_selection].die) * 2;
                         self.gold += g;
                         println!(
                             "\nYou found {} gold!\n\
@@ -201,7 +186,7 @@ impl Player {
                         );
                     }
                     Loot::Weapon { damage: d } => {
-                        let d = apply_bonuses(d, &chests[user_selection].dice) * 2;
+                        let d = apply_bonuses(d, &chests[user_selection].die) * 2;
                         let d = if d > 9999 { 9999 } else { d };
                         if self.weapon_dmg < d {
                             self.weapon_dmg = d;
@@ -236,7 +221,7 @@ impl Player {
                 );
             }
             Critical::None => {
-                if player_dice.0 >= chests[user_selection].dice.0 {
+                if player_die.0 >= chests[user_selection].die.0 {
                     match chests[user_selection].loot {
                         Loot::Potion => {
                             let p = 15;
@@ -247,7 +232,7 @@ impl Player {
                             println!("\nYou found a potion! You recovered {} HP.\n", p);
                         }
                         Loot::Gold(g) => {
-                            let g = apply_bonuses(g, &chests[user_selection].dice);
+                            let g = apply_bonuses(g, &chests[user_selection].die);
                             self.gold += g;
                             println!(
                                 "\nYou found {} gold!\n\
@@ -264,7 +249,7 @@ impl Player {
                             );
                         }
                         Loot::Weapon { damage: d } => {
-                            let d = apply_bonuses(d, &chests[user_selection].dice);
+                            let d = apply_bonuses(d, &chests[user_selection].die);
                             if self.weapon_dmg < d {
                                 self.weapon_dmg = d;
                                 println!(
@@ -282,6 +267,7 @@ impl Player {
                     };
                 } else {
                     println!("\nYou were too clumsy to open this chest!\n");
+                    self.monster_attack();
                 }
             }
         }
@@ -289,11 +275,11 @@ impl Player {
     fn print_exit(&self) {
         println!(
             "You walked out of the dungeon with:\n\
-                {} HP left.\n\
-                {} gold.\n\
-                {} weapon that deals {} points of damage.\n\
-                \n\
-                Thanks for playing!\n",
+            {} HP left.\n\
+            {} gold.\n\
+            {} weapon that deals {} points of damage.\n\
+            \n\
+            Thanks for playing!\n",
             self.hp,
             self.gold,
             if self.weapon_dmg < 1000 {
@@ -312,7 +298,7 @@ impl Player {
             but a {} jumps you on your way out!\n",
             match rand::random_range(0..7) {
                 0 => "Sneaky Goblin",
-                1 => "Walking Skeleton",
+                1 => "Cadaver, hmmm,",
                 2 => "Sticky Slime",
                 3 => "Giant Spider",
                 4 => "Cave Crawler",
@@ -321,25 +307,42 @@ impl Player {
             }
         );
         let monster_attack = rand::random_range(1..=8000);
+        if SHOW_DEBUG {
+            println!("------------------------------------");
+            dbg!(&monster_attack);
+            println!("------------------------------------\n");
+        }
         if self.weapon_dmg > monster_attack {
+            let battle_reward = rand::random_range(100..=300);
             if self.weapon_dmg - monster_attack < 200 {
                 println!(
                     "Your weapon was barely enough to outpower your foe!\n\
-                    You take no damage from this encounter.\n"
+                    The monster dropped a pouch containing {} gold inside.\n\
+                    You take no damage from this encounter.\n",
+                    battle_reward
                 );
             } else if self.weapon_dmg - monster_attack < 2000 {
                 println!(
                     "Your weapon proved very effective against your foe!\n\
-                    You take no damage from this encounter.\n"
+                    The monster dropped a pouch containing {} gold inside.\n\
+                    You take no damage from this encounter.\n",
+                    battle_reward
                 );
             } else if self.weapon_dmg - monster_attack < 6000 {
                 println!(
-                    "Your weapon had you defeat your foe effortlessly!\n\
-                    You take no damage from this encounter.\n"
+                    "Your weapon let you defeat your foe effortlessly!\n\
+                    The monster dropped a pouch containing {} gold inside.\n\
+                    You take no damage from this encounter.\n",
+                    battle_reward
                 );
             } else {
-                println!("Your weapon obliterated that poor bastard!\n");
+                println!(
+                    "Your weapon obliterated that poor bastard!\n\
+                    The monster dropped a pouch containing {} gold inside.\n",
+                    battle_reward
+                );
             }
+            self.gold += battle_reward;
         } else {
             let battle_damage = rand::random_range(15..=30);
             if monster_attack - self.weapon_dmg < 200 {
@@ -356,7 +359,7 @@ impl Player {
                 );
             } else if monster_attack - self.weapon_dmg < 6000 {
                 println!(
-                    "Your weapon didn't do your foe a single scratch!\n\
+                    "Your weapon didn't leave a single scratch on your foe!\n\
                     You managed to flee, but took {} points of damage.\n",
                     battle_damage
                 )
@@ -367,7 +370,11 @@ impl Player {
                     battle_damage
                 )
             };
-            self.hp -= battle_damage;
+            if self.hp > 14 && self.hp - battle_damage < 1 {
+                self.hp = 1;
+            } else {
+                self.hp -= battle_damage;
+            };
         };
     }
 }
@@ -380,9 +387,9 @@ enum Critical {
 }
 
 #[derive(Debug)]
-struct Dice(u8);
+struct Die(u8);
 
-impl Dice {
+impl Die {
     fn roll(cap: bool) -> Self {
         if cap {
             Self(rand::random_range(1..=18))
@@ -410,15 +417,17 @@ enum Loot {
 
 impl Loot {
     fn new() -> Self {
-        match rand::random_range(0..1000) {
-            /* Chance of Nothing: 10%.
-             * Chance of Key: 10%.
-             * Anything else: 26.6%.
+        match rand::random_range(0..100) {
+            /* Chance of Nothing:   10%.
+             * Chance of Key:       10%.
+             * Chance of Potion:    20%.
+             * Chance of Gold:      25%.
+             * Chance of Weapon:    35%.
              */
-            000..100 => Self::Key,
-            100..366 => Self::Gold(rand::random_range(20..=200)),
-            366..632 => Self::Potion,
-            632..898 => Self::Weapon {
+            00..10 => Self::Key,
+            10..30 => Self::Potion,
+            30..55 => Self::Gold(rand::random_range(20..=200)),
+            55..90 => Self::Weapon {
                 damage: rand::random_range(1..=3334),
             },
             _ => Self::Nothing,
@@ -429,7 +438,7 @@ impl Loot {
 #[derive(Debug)]
 struct Chest {
     loot: Loot,
-    dice: Dice,
+    die: Die,
     locked: bool,
 }
 
@@ -437,7 +446,7 @@ impl Chest {
     fn new() -> Self {
         Self {
             loot: Loot::new(),
-            dice: Dice::roll(true),
+            die: Die::roll(true),
             locked: match rand::random_range(0..5) {
                 0 => true,
                 _ => false,
@@ -445,9 +454,9 @@ impl Chest {
         }
     }
     fn is_strong(&self) -> &str {
-        if self.dice.0 < rand::random_range(5..=7) {
+        if self.die.0 < rand::random_range(5..=7) {
             "Flimsy"
-        } else if self.dice.0 < rand::random_range(13..=15) {
+        } else if self.die.0 < rand::random_range(13..=15) {
             "Regular"
         } else {
             "Sturdy"
@@ -464,23 +473,19 @@ fn get_user_selection(selection_range: usize) -> usize {
             println!("Failed to get user input with error:\n{}", error);
             continue;
         }
-        match input.trim().parse() {
-            Err(_) => {
-                println!("{}", error_msg);
-                continue;
-            }
-            Ok(selection) => {
-                if selection > selection_range {
-                    println!("{}", error_msg);
-                    continue;
-                }
-                return selection;
-            }
+        let Ok(selection) = input.trim().parse() else {
+            println!("{}", error_msg);
+            continue;
+        };
+        if selection > selection_range {
+            println!("{}", error_msg);
+            continue;
         }
+        return selection;
     }
 }
 
-fn apply_bonuses(n: usize, d: &Dice) -> usize {
+fn apply_bonuses(n: usize, d: &Die) -> usize {
     if d.0 < 7 {
         n / 2
     } else if d.0 < 15 {
