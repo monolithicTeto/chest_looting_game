@@ -4,92 +4,119 @@
 * outcomes.
 */
 
-use std::process::exit;
+use colored::Colorize;
 
 const TOTAL_CHESTS: i8 = 33 * 3;
 const SHOW_DEBUG: bool = false;
 
+// Declared an array of some less harsh hex colors to use later in the game.
+const TEXT_COLORS: [&str; 5] = ["#D1476F", "#D97A3D", "#CC9B3C", "#5FA968", "#3D7DBF"];
+
 fn main() {
-    clear_terminal();
-    if SHOW_DEBUG == false {
-        println!(
-            "\nWELCOME TO THE CHEST LOOTING GAME!\n\
-            ----------------------------------\n\
-            Armed with a Rusty Sword and your courage,\n\
-            you delve into the depths of a dungeon in\n\
-            search of unfathomable fortunes.\n"
-        );
-    };
-    let mut player = Player::new();
-    while player.remaining_chests > 0 {
-        if SHOW_DEBUG {
-            println!("------------------------------------");
-            dbg!(&player);
-            println!("------------------------------------\n");
-        }
-        let player_die = Die::roll(false);
-        println!(
-            "There are {} chests left in the dungeon.\n\
-            You rolled a die: {}",
-            player.remaining_chests, player_die.0
-        );
-        let critical_status = player_die.is_critical();
-        match critical_status {
-            Critical::Hit => println!("Oh yes!"),
-            Critical::Miss => println!("Oh no!"),
-            Critical::None => (),
-        }
-        if player.hp < 15 {
-            println!("\nYou can feel death closing in...");
-        } else if player.hp < 33 {
-            println!("\nYou're losing consciousness...");
-        } else if player.hp < 66 {
-            println!("\nYou feel a little dizzy...");
-        }
-        let chests = [Chest::new(), Chest::new(), Chest::new()];
-        if SHOW_DEBUG {
-            println!("\n------------------------------------");
-            dbg!(&chests);
-            println!("------------------------------------");
-        }
-        println!(
-            "\n\
-            Which chest do you want to open?\n\
-            \n\
-            1. A {}-looking Chest.\n\
-            2. A {}-looking Chest.\n\
-            3. A {}-looking Chest.\n\
-            \n\
-            0. Leave.\n",
-            chests[0].is_strong(),
-            chests[1].is_strong(),
-            chests[2].is_strong()
-        );
-        let user_selection = get_user_selection(3);
+    'retry_loop: loop {
         clear_terminal();
-        if user_selection == 0 {
-            player.print_exit();
-            exit(0);
-        }
-        player.open_chest(player_die, critical_status, chests, user_selection);
-        if player.hp < 1 {
+        if SHOW_DEBUG == false {
             println!(
-                "You bleed to death from your wounds.\n\
-                \n\
-                Your corpse lies somewhere in the depths\n\
-                of a dungeon, never to be found again.\n\
-                \n\
-                Thanks for playing!\n"
+                "\nWELCOME TO THE CHEST LOOTING GAME!\n\
+                ----------------------------------\n\
+                Armed with a Rusty Sword and your courage,\n\
+                you delve into the depths of a dungeon in\n\
+                search of unfathomable fortunes.\n"
             );
-            exit(0)
-        }
-        if player.remaining_chests > 0 {
-            println!("You walk over to the next room.\n");
         };
+        let mut player = Player::new();
+        while player.remaining_chests > 0 {
+            if SHOW_DEBUG {
+                println!("------------------------------------");
+                dbg!(&player);
+                println!("------------------------------------\n");
+            }
+            let player_die = Die::roll(false);
+            println!(
+                "There are {} chests left in the dungeon.\n\
+                You rolled a die: {}",
+                player.remaining_chests, player_die.0
+            );
+            let critical_status = player_die.is_critical();
+            match critical_status {
+                Critical::Hit => println!("Oh yes!"),
+                Critical::Miss => println!("Oh no!"),
+                Critical::None => (),
+            }
+            if player.hp < 15 {
+                println!(
+                    "\n{}",
+                    "You can feel death closing in..."
+                        .color(TEXT_COLORS[0])
+                        .bold()
+                );
+            } else if player.hp < 33 {
+                println!(
+                    "\n{}",
+                    "You're losing consciousness..."
+                        .color(TEXT_COLORS[1])
+                        .bold()
+                );
+            } else if player.hp < 66 {
+                println!(
+                    "\n{}",
+                    "You feel a little dizzy...".color(TEXT_COLORS[2]).bold()
+                );
+            }
+            let chests = [Chest::new(), Chest::new(), Chest::new()];
+            if SHOW_DEBUG {
+                println!("\n------------------------------------");
+                dbg!(&chests);
+                println!("------------------------------------");
+            }
+            println!(
+                "\n\
+                Which chest do you want to open?\n\
+                \n\
+                1. A {}-looking Chest.\n\
+                2. A {}-looking Chest.\n\
+                3. A {}-looking Chest.\n\
+                \n\
+                0. Leave the dungeon.\n",
+                chests[0].is_strong(),
+                chests[1].is_strong(),
+                chests[2].is_strong()
+            );
+            let user_selection = get_user_selection(3);
+            clear_terminal();
+            if user_selection == 0 {
+                player.print_exit();
+                if retry_prompt() == 1 {
+                    continue 'retry_loop;
+                };
+                std::process::exit(0);
+            }
+            player.open_chest(player_die, critical_status, chests, user_selection);
+            if player.hp < 1 {
+                println!(
+                    "You bleed to death from your wounds.\n\
+                    \n\
+                    Your corpse lies somewhere in the depths\n\
+                    of a dungeon, never to be found again.\n\
+                    \n\
+                    Thanks for playing!\n"
+                );
+                if retry_prompt() == 1 {
+                    continue 'retry_loop;
+                };
+                std::process::exit(0);
+            }
+            if player.remaining_chests > 0 {
+                println!("You walk over to the next room.\n");
+            };
+        }
+        println!("You cleared all the chests!\n");
+        player.print_exit();
+        if retry_prompt() == 1 {
+            continue 'retry_loop;
+        };
+        std::process::exit(0);
     }
-    println!("You cleared all the chests!\n");
-    player.print_exit();
-    exit(0)
 }
 
 #[derive(Debug)]
@@ -483,6 +510,19 @@ fn get_user_selection(selection_range: usize) -> usize {
         }
         return selection;
     }
+}
+
+fn retry_prompt() -> usize {
+    println!(
+        "{}",
+        "Do you want to start again?\n\
+        \n\
+        1. Start again!\n\
+        0. Quit the game.\n"
+            .color(TEXT_COLORS[4])
+            .bold()
+    );
+    get_user_selection(1)
 }
 
 fn apply_bonuses(n: usize, d: &Die) -> usize {
