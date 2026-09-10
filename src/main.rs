@@ -5,10 +5,14 @@
 */
 
 // Reduces cross-terminal stylization and manipulation to one library.
-use crossterm::style::{Color, Stylize};
+use crossterm::{
+    cursor::MoveTo,
+    style::{Color, Stylize},
+    terminal::{Clear, ClearType},
+};
 
-const TOTAL_CHESTS: i8 = 33 * 3;
 const SHOW_DEBUG: bool = false;
+const TOTAL_CHESTS: i8 = 33 * 3;
 const TEXT_COLORS: TextColors = TextColors {
     green: [95, 169, 104],  // #5FA968
     blue: [61, 125, 191],   // #3D7DBF
@@ -515,10 +519,9 @@ fn get_user_selection(selection_range: usize) -> usize {
     let mut input = String::new();
     loop {
         input.clear();
-        if let Err(error) = std::io::stdin().read_line(&mut input) {
-            println!("Failed to get user input with error:\n{}", error);
-            continue;
-        }
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("ERROR: failed to get user input.");
         let Ok(selection) = input.trim().parse() else {
             println!("{}", error_msg);
             continue;
@@ -556,14 +559,8 @@ fn apply_bonuses(n: usize, d: &Die) -> usize {
 }
 
 fn clear_terminal() {
-    /* 1B: terminal ESC command.
-     * [2J: clears the terminal.
-     * [1;1H: moves the cursor back to position '1;1'.
-     */
     if SHOW_DEBUG == false {
-        print!(
-            "\x1B[2J\
-            \x1B[1;1H"
-        );
+        crossterm::execute!(std::io::stdout(), Clear(ClearType::All), MoveTo(0, 0))
+            .expect("ERROR: failed to clear terminal.")
     };
 }
