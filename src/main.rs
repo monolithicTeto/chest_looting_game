@@ -4,13 +4,18 @@
 * outcomes.
 */
 
-use colored::Colorize;
+// Reduces cross-terminal stylization and manipulation to one library.
+use crossterm::style::{Color, Stylize};
 
 const TOTAL_CHESTS: i8 = 33 * 3;
 const SHOW_DEBUG: bool = false;
-
-// Declared an array of some less harsh hex colors to use later in the game.
-const TEXT_COLORS: [&str; 5] = ["#D1476F", "#D97A3D", "#CC9B3C", "#5FA968", "#3D7DBF"];
+const TEXT_COLORS: TextColors = TextColors {
+    green: [95, 169, 104],  // #5FA968
+    blue: [61, 125, 191],   // #3D7DBF
+    yellow: [204, 155, 60], // #CC9B3C
+    orange: [217, 122, 61], // #D97A3D
+    red: [209, 71, 111],    // #D1476F
+};
 
 fn main() {
     'retry_loop: loop {
@@ -44,23 +49,28 @@ fn main() {
                 Critical::None => (),
             }
             if player.hp < 15 {
+                let [r, g, b] = TEXT_COLORS.red;
                 println!(
                     "\n{}",
                     "You can feel death closing in..."
-                        .color(TEXT_COLORS[0])
+                        .with(Color::Rgb { r: r, g: g, b: b })
                         .bold()
                 );
             } else if player.hp < 33 {
+                let [r, g, b] = TEXT_COLORS.orange;
                 println!(
                     "\n{}",
                     "You're losing consciousness..."
-                        .color(TEXT_COLORS[1])
+                        .with(Color::Rgb { r: r, g: g, b: b })
                         .bold()
                 );
             } else if player.hp < 66 {
+                let [r, g, b] = TEXT_COLORS.yellow;
                 println!(
                     "\n{}",
-                    "You feel a little dizzy...".color(TEXT_COLORS[2]).bold()
+                    "You feel a little dizzy..."
+                        .with(Color::Rgb { r: r, g: g, b: b })
+                        .bold()
                 );
             }
             let chests = [Chest::new(), Chest::new(), Chest::new()];
@@ -117,6 +127,15 @@ fn main() {
         };
         std::process::exit(0);
     }
+}
+
+#[allow(dead_code)]
+struct TextColors {
+    green: [u8; 3],
+    blue: [u8; 3],
+    yellow: [u8; 3],
+    orange: [u8; 3],
+    red: [u8; 3],
 }
 
 #[derive(Debug)]
@@ -513,13 +532,14 @@ fn get_user_selection(selection_range: usize) -> usize {
 }
 
 fn retry_prompt() -> usize {
+    let [r, g, b] = TEXT_COLORS.blue;
     println!(
         "{}",
         "Do you want to start again?\n\
         \n\
         1. Start again!\n\
         0. Quit the game.\n"
-            .color(TEXT_COLORS[4])
+            .with(Color::Rgb { r: r, g: g, b: b })
             .bold()
     );
     get_user_selection(1)
