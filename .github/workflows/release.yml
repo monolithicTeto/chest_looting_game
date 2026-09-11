@@ -15,10 +15,12 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact: chest_looting_game
-            asset_name: chest-looting-game-linux
+            name: chest-looting-game-linux
+            ext: ""
           - os: windows-latest
             artifact: chest_looting_game.exe
-            asset_name: chest-looting-game-windows.exe
+            name: chest-looting-game-windows
+            ext: ".exe"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -29,11 +31,17 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      - name: Prepare versioned binary
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp target/release/${{ matrix.artifact }} "release-assets/${{ matrix.name }}-${{ github.ref_name }}${{ matrix.ext }}"
+
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset_name }}
-          path: target/release/${{ matrix.artifact }}
+          name: ${{ matrix.name }}
+          path: release-assets/*
 
   release:
     needs: build
