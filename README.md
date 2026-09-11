@@ -20,5 +20,7 @@ chmod +x chest_looting_game
 ./chest_looting_game
 ```
 
+---
+
 Have fun!
 
