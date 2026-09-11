@@ -3,7 +3,7 @@
 
     inputs = {
 
-        # Inputs the unstable branch of nixpkgs.
+        # Inputs an arbitrary stable release of nixpkgs.
         nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
     };
