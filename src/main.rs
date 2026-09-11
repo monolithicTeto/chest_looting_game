@@ -205,7 +205,7 @@ impl Player {
             3 => "a Dagger",
             4 => "a Spear",
             5 => "a Mace",
-            6 => "an Evil Sceptre"
+            6 => "an Evil Sceptre",
             _ => "a Hammer",
         };
         match critical_status {
