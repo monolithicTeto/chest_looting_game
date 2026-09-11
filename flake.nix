@@ -4,7 +4,7 @@
     inputs = {
 
         # Inputs the unstable branch of nixpkgs.
-        nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+        nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
     };
 
