@@ -4,6 +4,11 @@
 * outcomes.
 */
 
+/* TODO:
+ * - [ ] Test run the game to list where to implement color.
+ * - [ ] (list)
+ */
+
 // Reduces cross-terminal stylization and manipulation to one library.
 use crossterm::{
     cursor::MoveTo,
