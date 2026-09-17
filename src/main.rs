@@ -5,7 +5,9 @@
 */
 
 /* TODO:
+ * - [ ] Remove coloring to start from a clean state.
  * - [ ] Test run the game to list where to implement color.
+ * - [ ] Define some hex colors for each colored item.
  * - [ ] (list)
  */
 
@@ -58,29 +60,11 @@ fn main() {
                 Critical::None => (),
             }
             if player.hp < 15 {
-                let [r, g, b] = TEXT_COLORS.red;
-                println!(
-                    "\n{}",
-                    "You can feel death closing in..."
-                        .with(Color::Rgb { r: r, g: g, b: b })
-                        .bold()
-                );
+                println!("\nYou can feel death closing in...");
             } else if player.hp < 33 {
-                let [r, g, b] = TEXT_COLORS.orange;
-                println!(
-                    "\n{}",
-                    "You're losing consciousness..."
-                        .with(Color::Rgb { r: r, g: g, b: b })
-                        .bold()
-                );
+                println!("\nYou're losing consciousness...");
             } else if player.hp < 66 {
-                let [r, g, b] = TEXT_COLORS.yellow;
-                println!(
-                    "\n{}",
-                    "You feel a little dizzy..."
-                        .with(Color::Rgb { r: r, g: g, b: b })
-                        .bold()
-                );
+                println!("\nYou feel a little dizzy...");
             }
             let chests = [Chest::new(), Chest::new(), Chest::new()];
             if SHOW_DEBUG {
